@@ -4,7 +4,8 @@ run-name: TV test APK (ARMv7 + ARM64) on ${{ github.ref_name }}
 on:
   workflow_dispatch:
   push:
-    branches: [codex/android-tv]
+    branches: [main, codex/android-tv]
+    paths: [.github/workflows/tv-apk.yml]
 
 permissions:
   contents: read
@@ -33,9 +34,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi
-      - uses: android-actions/setup-android@v3
-      - name: Install pinned Android dependencies
-        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0' 'ndk;27.2.12479018'
+      - name: Set up Android SDK and accept licenses non-interactively
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: '13114758'
+          # Override the action's default list, which includes obsolete "tools".
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.0 build-tools;36.0.0 ndk;27.2.12479018'
+          accept-android-sdk-licenses: 'true'
+          log-accepted-android-sdk-licenses: 'false'
       - run: npm ci
       - name: Validate web code
         run: |
@@ -60,7 +66,7 @@ jobs:
           tools="$ANDROID_HOME/build-tools/36.0.0"
           "$tools/apksigner" verify --verbose --print-certs "$apk" | tee tv-artifact/signature.txt
           "$tools/aapt" dump badging "$apk" | tee tv-artifact/apk-badging.txt
-          python ../scripts/verify-tv-apk.py "$apk" "$tools/aapt"
+          python ../scripts/verify-tv-apk.py "$apk" "$tools/aapt" | tee tv-artifact/packaging-check.txt
           "$tools/zipalign" -c -P 16 -v 4 "$apk" > tv-artifact/alignment.txt
           (cd tv-artifact && sha256sum JARVIS-TV-test-arm-universal.apk > SHA256SUMS)
           git rev-parse HEAD > tv-artifact/commit.txt

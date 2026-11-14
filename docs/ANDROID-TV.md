@@ -64,7 +64,10 @@ green **Run workflow** button. Refresh the page and open the new run. Wait for t
 link or the **Artifacts → jarvis-tv-test-apk** entry at the bottom of the run page.
 Download the ZIP and extract `JARVIS-TV-test-arm-universal.apk`. Sign into GitHub
 to run workflows and download artifacts. Artifacts expire after 14 days.
-A push to `codex/android-tv` also runs the workflow automatically.
+Changes to `.github/workflows/tv-apk.yml` on `main` or `codex/android-tv`
+also run it automatically. Android SDK setup uses the action's supported
+`accept-android-sdk-licenses: 'true'` input and an explicit package list;
+the obsolete SDK package `tools` is excluded.
 `SHA256SUMS`, APK metadata, signing output and commit SHA accompany it.
 An unexecuted workflow is not evidence that an APK exists or that the build passes.
 
