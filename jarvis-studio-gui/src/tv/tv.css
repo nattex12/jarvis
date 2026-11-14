@@ -1,0 +1,47 @@
+/* Applied only to native television mode or the explicit ?tv=1 preview. */
+.tv-mode {
+  font-size: 18px;
+}
+.tv-mode body {
+  overscroll-behavior: none;
+}
+.tv-mode
+  :is(
+    button,
+    a,
+    input,
+    textarea,
+    select,
+    summary,
+    [tabindex],
+    [role="button"],
+    [role="switch"]
+  ):focus {
+  outline: 3px solid #66e5ff !important;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 6px #071b2b !important;
+}
+.tv-mode :is(button, input, select, [role="button"], [role="switch"]) {
+  min-height: 48px;
+  font-size: 16px;
+}
+.tv-mode textarea {
+  font-size: 18px;
+}
+.tv-mode :is(.sp-desc, .ob-desc, .quick-start__guide p) {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.tv-mode :is(.home, .ob) {
+  padding: 4vh 5vw;
+}
+.tv-mode .sp--float {
+  width: min(1100px, 90vw);
+  max-height: 90vh;
+}
+.tv-mode .sp-body {
+  scroll-padding: 16px;
+}
+.tv-mode .ob {
+  overflow-y: auto;
+}

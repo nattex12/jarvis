@@ -180,6 +180,10 @@ Stuff to know before you build:
 
 A signed release build reads `src-tauri/gen/android/keystore.properties` (copy `keystore.properties.example` to start). Without it, the release APK falls back to the debug key so you can still sideload it. `src-tauri/gen/android` is committed on purpose. It holds hand-made settings (`allowBackup="false"`, the release cleartext rule, signing) that a fresh `tauri android init` would wipe out.
 
+For an experimental build that runs JARVIS directly on Android TV, see
+[TV build, Windows ADB setup and installation](docs/ANDROID-TV.md). The separate
+TV test workflow includes ARM64 and ARMv7; it does not establish device compatibility.
+
 ## Releasing
 
 The app checks for updates at launch and roughly every six hours in the background. When there's one, a popup shows the feature count, highlights and fixes. Users can download right in the app, snooze until tomorrow, skip a version, or check manually under **Settings → System → Updates**. Wi-Fi auto-download is optional. Before Android asks anyone to confirm the install, the APK gets checked against its release checksum and the installed app's package/signing identity.

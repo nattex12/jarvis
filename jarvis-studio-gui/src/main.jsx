@@ -22,8 +22,12 @@ import BrowserPanel from "./components/BrowserPanel";
 import ControlOverlay from "./components/ControlOverlay";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { isMobileViewport } from "./utils/isMobileViewport";
+import { installTVNavigation, isTelevision } from "./tv/navigation";
 import "./index.css";
 import "./ui.css";
+import "./tv/tv.css";
+
+if (isTelevision()) installTVNavigation();
 
 // Both windows load the same page. Detect which one we are by reading the
 // Tauri-injected window label. Falls back to "main" in browser dev mode.
@@ -38,7 +42,7 @@ const forceControlOverlay = params.has("control-overlay");
 // control-overlay windows don't exist on mobile, but Tauri-mobile's single WebView
 // can report one of their labels (not "main"), which would route us to the wrong
 // component. So on a touch / narrow viewport we always render the main HUD.
-const windowLabel = isMobileViewport()
+const windowLabel = isMobileViewport() || isTelevision()
   ? "main"
   : forceControlOverlay
     ? "control-overlay"

@@ -19,11 +19,18 @@ android {
     namespace = "com.jarvis.app"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
+        manifestPlaceholders["jarvisAppLabel"] = "JARVIS"
         applicationId = "com.jarvis.app"
         minSdk = 24
         targetSdk = 36
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+    }
+    // Opt-in test package; keep phone/release signing and identifiers unchanged.
+    if (System.getenv("JARVIS_TV_TEST") == "1") {
+        ndkVersion = "27.2.12479018"
+        defaultConfig.applicationId = "com.jarvis.app.tvtest"
+        defaultConfig.manifestPlaceholders["jarvisAppLabel"] = "JARVIS TV Test"
     }
     val keystorePropertiesFile = rootProject.file("keystore.properties")
     val releaseKeystoreProperties = Properties()
@@ -46,10 +53,14 @@ android {
             isDebuggable = true
             isJniDebuggable = true
             isMinifyEnabled = false
-            packaging {                jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
-                jniLibs.keepDebugSymbols.add("*/armeabi-v7a/*.so")
-                jniLibs.keepDebugSymbols.add("*/x86/*.so")
-                jniLibs.keepDebugSymbols.add("*/x86_64/*.so")
+            // TV sideloads should not ship hundreds of MB of Rust debug symbols.
+            if (System.getenv("JARVIS_TV_TEST") != "1") {
+                packaging {
+                    jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
+                    jniLibs.keepDebugSymbols.add("*/armeabi-v7a/*.so")
+                    jniLibs.keepDebugSymbols.add("*/x86/*.so")
+                    jniLibs.keepDebugSymbols.add("*/x86_64/*.so")
+                }
             }
         }
         getByName("release") {

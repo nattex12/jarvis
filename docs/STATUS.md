@@ -1,5 +1,31 @@
 # Status
 
+**2026-11-14 — Experimental direct Android TV test build:** prepared
+`JARVIS-TV-test-arm-universal.apk` locally (111,068,253 bytes), separately packaged
+as `com.jarvis.app.tvtest` / **JARVIS TV Test**. User-reported target: Synix TV,
+device name GoogleTV4254, Android TV OS 14; ADB connected successfully and reported
+`armeabi-v7a, armeabi` (32-bit ARM). The existing ARM64-only APK workflow cannot
+target that OS. The new universal APK contains JARVIS, ONNX and MediaPipe libraries
+for ARMv7 and ARM64. Minimum/target SDK are 24/36. Android Debug APK v2 signature,
+16 KB ZIP alignment, test package, TV launcher/banner and optional hardware checks
+passed. SHA-256:
+`eafc194aa24eb71500e74abd61563005819b9c55ce64e0cda71b29663d1b5c14`.
+
+TV mode adds spatial D-pad navigation, OK activation, visible focus, modal focus
+containment/restoration (including autofocus), text-field escape and scrolling.
+Android Back retains the existing native route. TV-only launcher apps are included
+in native app discovery. Validation: 973 JS tests passed / 9 skipped, typecheck,
+lint, production web build, 10 contract fixtures, 3 release-gate tests, and all
+174 Kotlin debug unit tests (no skips). Chromium smoke checks cover TV focus setup
+and real-DOM remote navigation, caret editing, modal restoration and scrolling.
+
+No APK was installed on a television in this session. TV launcher appearance,
+WebView/remote/keyboard/Back behavior, live chat, microphone/TTS/wake word,
+accessibility and standby/resume remain physical-device acceptance work.
+`.github/workflows/tv-apk.yml` provides a repeatable downloadable-artifact fallback;
+it was not run because the local cloud build succeeded. No release was published.
+See [Android TV installation and checks](ANDROID-TV.md).
+
 **2026-11-08 — Signed Android release candidate 2.5.6-rc.3:**
 created `JARVIS-v2.5.6-rc.3-arm64.apk` locally with build number 2005008,
 including the tool execution and chat activity changes below. The 52,570,032-byte

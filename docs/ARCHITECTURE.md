@@ -24,6 +24,23 @@ path is the thing that breaks this app.
 
 ---
 
+## Android TV test shell
+
+The experimental TV shell runs the same in-app brain directly on the television.
+`MainActivity.onWebViewCreate` marks Android television UI mode with `JarvisTV/1`
+in the user agent. `src/main.jsx` selects the main window and installs
+`src/tv/navigation.js` only for that mode (or the explicit `?tv=1` browser preview).
+The TV layer provides spatial D-pad focus, OK activation, modal containment and
+focus restoration; text editing and native Android Back retain their existing paths.
+`tv.css` adds focus and TV spacing. Native `LauncherApps` includes Leanback-only
+activities on television devices. There is no additional tool dispatch/bridge.
+
+`JARVIS_TV_TEST=1` opts Gradle into package `com.jarvis.app.tvtest` for separate
+debug-signed sideload testing. Standard builds retain `com.jarvis.app`.
+The manifest includes a TV banner and optional touchscreen/telephony hardware;
+phone permission declarations and existing authorization still apply.
+See [ANDROID-TV.md](ANDROID-TV.md) for build/install and physical-device checks.
+
 ## 1. The brain lives in TypeScript, not Python
 
 On Windows the brain is a Python process the app talks to over a WebSocket. On Android

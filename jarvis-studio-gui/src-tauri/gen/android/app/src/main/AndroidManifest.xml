@@ -22,11 +22,17 @@
 
     <!-- AndroidTV support -->
     <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <!-- Package-visibility (API 30+): without this, queryIntentActivities() in
          PhonePlugin.kt's launchApp() sees no other installed apps, so open_app
          silently fails to resolve almost every third-party/OEM app by name. -->
     <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -77,7 +83,8 @@
 
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:banner="@drawable/tv_banner"
+        android:label="${jarvisAppLabel}"
         android:theme="@style/Theme.jarvis_studio_gui"
         android:allowBackup="false"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
@@ -86,7 +93,7 @@
         <activity
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|density|layoutDirection|colorMode|grammaticalGender|fontScale|fontWeightAdjustment|assetsPaths"
             android:launchMode="singleTask"
-            android:label="@string/main_activity_title"
+            android:label="${jarvisAppLabel}"
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

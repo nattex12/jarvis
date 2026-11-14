@@ -1,0 +1,94 @@
+name: Android TV test APK
+run-name: TV test APK (ARMv7 + ARM64) on ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/android-tv]
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: jarvis-studio-gui
+    env:
+      JARVIS_TV_TEST: "1"
+      CARGO_BUILD_JOBS: "2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: jarvis-studio-gui/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+      - uses: android-actions/setup-android@v3
+      - name: Install pinned Android dependencies
+        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0' 'ndk;27.2.12479018'
+      - run: npm ci
+      - name: Validate web code
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run test:contracts
+          npm run test:release-gate
+          npm test
+      - name: Build sideloadable ARM64 and ARMv7 universal APK
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
+        run: npx tauri android build --ci --debug --apk --target aarch64 armv7
+      - name: Kotlin regressions
+        working-directory: jarvis-studio-gui/src-tauri/gen/android
+        run: bash ./gradlew :tauri-plugin-phone:testDebugUnitTest
+      - name: Inspect APK and collect evidence
+        run: |
+          set -euo pipefail
+          mkdir -p tv-artifact
+          cp src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk tv-artifact/JARVIS-TV-test-arm-universal.apk
+          apk=tv-artifact/JARVIS-TV-test-arm-universal.apk
+          tools="$ANDROID_HOME/build-tools/36.0.0"
+          "$tools/apksigner" verify --verbose --print-certs "$apk" | tee tv-artifact/signature.txt
+          "$tools/aapt" dump badging "$apk" | tee tv-artifact/apk-badging.txt
+          python ../scripts/verify-tv-apk.py "$apk" "$tools/aapt"
+          "$tools/zipalign" -c -P 16 -v 4 "$apk" > tv-artifact/alignment.txt
+          (cd tv-artifact && sha256sum JARVIS-TV-test-arm-universal.apk > SHA256SUMS)
+          git rev-parse HEAD > tv-artifact/commit.txt
+          cp ../docs/ANDROID-TV.md tv-artifact/INSTALL.md
+          echo 'Download **jarvis-tv-test-apk** below. Install JARVIS-TV-test-arm-universal.apk. This is a debug-signed, separate test package; physical TV testing is still required.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload downloadable TV APK
+        id: upload-apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-tv-test-apk
+          path: jarvis-studio-gui/tv-artifact/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - name: Link to the APK download
+        env:
+          APK_ARTIFACT_URL: ${{ steps.upload-apk.outputs.artifact-url }}
+        run: |
+          {
+            echo '### TV APK download'
+            echo "[Download jarvis-tv-test-apk]($APK_ARTIFACT_URL)"
+            echo ''
+            echo 'Extract JARVIS-TV-test-arm-universal.apk from the ZIP. It includes armeabi-v7a for 32-bit ARM televisions, as well as arm64-v8a.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep native test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-tv-native-test-results
+          path: jarvis-studio-gui/src-tauri/tauri-plugin-phone/android/build/reports/
+          if-no-files-found: ignore

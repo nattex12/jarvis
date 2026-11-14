@@ -809,12 +809,18 @@ internal object LauncherApps {
     fun all(context: Context, refresh: Boolean = false): List<App> {
         if (!refresh) cache?.let { return it }
         val pm = context.packageManager
-        val launcher = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
-        return pm.queryIntentActivities(launcher, 0).mapNotNull { r ->
+        val categories = if (context.resources.configuration.uiMode and
+            android.content.res.Configuration.UI_MODE_TYPE_MASK ==
+            android.content.res.Configuration.UI_MODE_TYPE_TELEVISION) {
+            listOf(Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER)
+        } else listOf(Intent.CATEGORY_LAUNCHER)
+        return categories.flatMap { category ->
+            pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(category), 0)
+        }.mapNotNull { r ->
             val info = r.activityInfo ?: return@mapNotNull null
             // Invisible format characters (direction marks) in a label defeat whole-word matching.
             App(r.loadLabel(pm).toString().replace(Regex("\\p{Cf}"), "").trim(), info.packageName, info.name)
-        }.also { cache = it }
+        }.distinctBy { "${it.packageName}/${it.className}" }.also { cache = it }
     }
 }
 
@@ -867,7 +873,7 @@ internal fun launchApp(context: Context, name: String, fresh: Boolean = false): 
     fun start(app: LauncherApps.App): Boolean = try {
         context.startActivity(
             Intent(Intent.ACTION_MAIN).apply {
-                addCategory(Intent.CATEGORY_LAUNCHER)
+                // Explicit component also supports TV-only launcher activities.
                 setClassName(app.packageName, app.className)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                 if (fresh) addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
